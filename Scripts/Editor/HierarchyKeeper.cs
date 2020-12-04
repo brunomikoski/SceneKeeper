@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -43,6 +44,9 @@ namespace BrunoMikoski.SceneHierarchyKeeper
         }
 
         private static HierarchyData cachedHierarchyData;
+        private static Dictionary<Transform, string> sceneItemsCache = new Dictionary<Transform, string>();
+        private static Dictionary<string, GameObject> pathToGameObjectsCache = new Dictionary<string, GameObject>();
+
         private static HierarchyData hierarchyData
         {
             get
@@ -68,7 +72,7 @@ namespace BrunoMikoski.SceneHierarchyKeeper
 
         private static void OnSceneLoaded(Scene scene, LoadSceneMode arg1)
         {
-            RestoreExpandedData(scene.path);
+            RestoreExpandedData(scene);
         }
 
         private static void OnSceneClosing(Scene scene, bool removingscene)
@@ -78,10 +82,10 @@ namespace BrunoMikoski.SceneHierarchyKeeper
 
         private static void OnSceneOpened(Scene scene, OpenSceneMode mode)
         {
-            RestoreExpandedData(scene.path);
+            RestoreExpandedData(scene);
         }
 
-        private static void RestoreExpandedData(string scenePath)
+        private static void RestoreExpandedData(Scene scene)
         {
             if (hierarchyWindow == null)
                 return;
@@ -89,7 +93,7 @@ namespace BrunoMikoski.SceneHierarchyKeeper
             if (!HierarchyKeeperTools.IsActive())
                 return;
             
-            if (!hierarchyData.TryGetSceneData(scenePath, out SceneHierarchyData sceneHierarchyData)) 
+            if (!hierarchyData.TryGetSceneData(scene.path, out SceneHierarchyData sceneHierarchyData)) 
                 return;
             
             object sceneHierarchy = SceneHierarchyWindowType.GetProperty(SceneHierarchyPropertyName).GetValue(hierarchyWindow);
@@ -105,16 +109,58 @@ namespace BrunoMikoski.SceneHierarchyKeeper
             for (int i = 0; i < sceneHierarchyData.itemsPath.Count; i++)
             {
                 string expandedItemPath = sceneHierarchyData.itemsPath[i];
-                GameObject path = GameObject.Find(expandedItemPath);
-                if (path == null)
-                    continue;
-                
-                setExpandedMethod.Invoke(sceneHierarchy, new object[] {path.GetInstanceID(), true});
+                GameObject gameObjectAtPath = GameObject.Find(expandedItemPath);
+                if (gameObjectAtPath == null)
+                {
+                    if (!TryToFindBySceneRootObjects(scene, expandedItemPath, out gameObjectAtPath))
+                        continue;
+                }
+
+                setExpandedMethod.Invoke(sceneHierarchy, new object[] {gameObjectAtPath.GetInstanceID(), true});
             }
+        }
+
+        private static bool TryToFindBySceneRootObjects(Scene scene, string targetItemPath, out GameObject resultGameObject)
+        {
+            if (pathToGameObjectsCache.TryGetValue(targetItemPath, out resultGameObject))
+            {
+                if (resultGameObject != null)
+                    return true;
+                
+                pathToGameObjectsCache.Remove(targetItemPath);
+            }
+            
+            GameObject[] objects = scene.GetRootGameObjects();
+            for (int i = 0; i < objects.Length; i++)
+            {
+                GameObject rootGameObject = objects[i];
+                Transform[] allChild = rootGameObject.GetComponentsInChildren<Transform>(true);
+                for (int j = 0; j < allChild.Length; j++)
+                {
+                    Transform transform = allChild[j];
+                    if (!sceneItemsCache.TryGetValue(transform, out string itemPath))
+                    {
+                        itemPath = transform.GetPath();
+                        sceneItemsCache.Add(transform, itemPath);
+                    }
+                    
+                    if (itemPath.Equals(targetItemPath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        resultGameObject = transform.gameObject;
+                        pathToGameObjectsCache.Add(targetItemPath, resultGameObject);
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private static void StoreExpandedData(string targetScenePath)
         {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                return;
+
             if (hierarchyWindow == null)
                 return;
             
