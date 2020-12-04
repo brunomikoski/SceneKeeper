@@ -1,7 +1,7 @@
 # Scene Hierarchy Keeper
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://github.com/brunomikoski/SceneHierarchyKeeper/blob/develop/LICENSE)
-[![openupm](https://img.shields.io/npm/v/com.brunomikoski.scenehierarchykeeper?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.brunomikoski.scenehierarchykeeper/) 
+[![openupm](https://img.shields.io/npm/v/com.brunomikoski.scenehierarchykeeper?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.brunomikoski.scenehierarchykeeper/)
 
 [![](https://img.shields.io/github/followers/brunomikoski?label=Follow&style=social)](https://github.com/brunomikoski) [![](https://img.shields.io/twitter/follow/brunomikoski?style=social)](https://twitter.com/brunomikoski)
 
