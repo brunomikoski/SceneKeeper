@@ -44,9 +44,6 @@ namespace BrunoMikoski.SceneHierarchyKeeper
         }
 
         private static HierarchyData cachedHierarchyData;
-        private static Dictionary<Transform, string> sceneItemsCache = new Dictionary<Transform, string>();
-        private static Dictionary<string, GameObject> pathToGameObjectsCache = new Dictionary<string, GameObject>();
-
         private static HierarchyData hierarchyData
         {
             get
@@ -56,6 +53,9 @@ namespace BrunoMikoski.SceneHierarchyKeeper
                 return cachedHierarchyData;
             }
         }
+        
+        private static Dictionary<Transform, string> sceneItemsCache = new Dictionary<Transform, string>();
+        private static Dictionary<string, GameObject> pathToGameObjectsCache = new Dictionary<string, GameObject>();
 
         static HierarchyKeeper()
         {
@@ -63,6 +63,31 @@ namespace BrunoMikoski.SceneHierarchyKeeper
             SceneManager.sceneLoaded += OnSceneLoaded;
             EditorSceneManager.sceneClosing += OnSceneClosing;
             SceneManager.sceneUnloaded += OnSceneUnloaded;
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+        }
+
+        private static void OnPlayModeStateChanged(PlayModeStateChange playModeStateChanged)
+        {
+            if (playModeStateChanged == PlayModeStateChange.ExitingEditMode)
+            {
+                StoreCurrentSelection();
+            }
+        }
+
+        private static void StoreCurrentSelection()
+        {
+            hierarchyData.selectionData.Clear();
+            
+            for (int i = 0; i < Selection.objects.Length; i++)
+            {
+                Object selected = Selection.objects[i];
+                if (selected is GameObject selectedGameObject)
+                {
+                    hierarchyData.selectionData.Add(new SelectionData(selectedGameObject.transform.GetPath(),
+                        selectedGameObject.scene.path));
+                }
+            }
+            SaveData();
         }
 
         private static void OnSceneUnloaded(Scene scene)
@@ -109,19 +134,43 @@ namespace BrunoMikoski.SceneHierarchyKeeper
             for (int i = 0; i < sceneHierarchyData.itemsPath.Count; i++)
             {
                 string expandedItemPath = sceneHierarchyData.itemsPath[i];
-                GameObject gameObjectAtPath = GameObject.Find(expandedItemPath);
-                if (gameObjectAtPath == null)
-                {
-                    if (!TryToFindBySceneRootObjects(scene, expandedItemPath, out gameObjectAtPath))
-                        continue;
-                }
+            
+                if (!TryToFindBySceneRootObjects(scene, expandedItemPath, out GameObject gameObjectAtPath))
+                    continue;
 
                 setExpandedMethod.Invoke(sceneHierarchy, new object[] {gameObjectAtPath.GetInstanceID(), true});
             }
+
+            RestoreSelectionData(scene);
+        }
+
+        private static void RestoreSelectionData(Scene scene)
+        {
+            List<Object> selection = new List<Object>();
+            for (int i = 0; i < hierarchyData.selectionData.Count; i++)
+            {
+                SelectionData selectionData = hierarchyData.selectionData[i];
+                if (!selectionData.scenePath.Equals(scene.path, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (!TryToFindBySceneRootObjects(scene, selectionData.itemPath, out GameObject resultGameObject))
+                    continue;
+
+                selection.Add(resultGameObject);
+            }
+
+            if (selection.Count == 0)
+                return;
+
+            Selection.objects = selection.ToArray();
         }
 
         private static bool TryToFindBySceneRootObjects(Scene scene, string targetItemPath, out GameObject resultGameObject)
         {
+            resultGameObject = GameObject.Find(targetItemPath);
+            if (resultGameObject != null)
+                return true;
+            
             if (pathToGameObjectsCache.TryGetValue(targetItemPath, out resultGameObject))
             {
                 if (resultGameObject != null)

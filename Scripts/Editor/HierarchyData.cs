@@ -10,6 +10,9 @@ namespace BrunoMikoski.SceneHierarchyKeeper
         [SerializeField]
         internal List<SceneHierarchyData> scenesHierarchy = new List<SceneHierarchyData>();
 
+        [SerializeField]
+        internal List<SelectionData> selectionData = new List<SelectionData>();
+        
         public SceneHierarchyData GetOrAddSceneData(string scenePath)
         {
             if (TryGetSceneData(scenePath, out SceneHierarchyData resultData))
@@ -34,6 +37,21 @@ namespace BrunoMikoski.SceneHierarchyKeeper
 
             resultSceneHierarchyData = null;
             return false;
+        }
+    }
+
+    [Serializable]
+    internal class SelectionData
+    {
+        [SerializeField]
+        internal string scenePath;
+        [SerializeField]
+        internal string itemPath;
+
+        public SelectionData(string transformPath, string targetScenePath)
+        {
+            scenePath = targetScenePath;
+            itemPath = targetScenePath;
         }
     }
             
