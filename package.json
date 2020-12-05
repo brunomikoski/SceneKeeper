@@ -1,6 +1,6 @@
 {
-  "name": "com.brunomikoski.scenehierarchykeeper",
-  "displayName": "Scene Hierarchy Keeper",
+  "name": "com.brunomikoski.scenekeeper",
+  "displayName": "Scene Keeper",
   "version": "0.0.3",
   "unity": "2018.4",
   "description": "A tool that keeps your scene hierarchy between editor/play time, and opening and close scene",
@@ -10,12 +10,12 @@
     "quality of life"
   ],
   "category": "editor extensions",
-  "homepage": "https://github.com/brunomikoski/SceneHierarchyKeeper",
+  "homepage": "https://github.com/brunomikoski/SceneKeeper",
   "repository": {
     "type": "git",
-    "url": "https://github.com/brunomikoski/SceneHierarchyKeeper.git"
+    "url": "https://github.com/brunomikoski/SceneKeeper.git"
   },
-  "bugs": "https://github.com/brunomikoski/SceneHierarchyKeeper/issues",
+  "bugs": "https://github.com/brunomikoski/SceneKeeper/issues",
   "author": {
     "name": "Bruno Mikoski",
     "url": "https://www.brunomikoski.com"
