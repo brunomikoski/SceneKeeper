@@ -1,7 +1,7 @@
 {
   "name": "com.brunomikoski.scenekeeper",
   "displayName": "Scene Keeper",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "unity": "2018.4",
   "description": "A tool that keeps your scene hierarchy between editor/play time, and opening and close scene",
   "keywords": [

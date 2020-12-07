@@ -12,6 +12,9 @@ namespace BrunoMikoski.SceneHierarchyKeeper
 
         [SerializeField]
         internal List<SelectionData> selectionData = new List<SelectionData>();
+
+        [SerializeField]
+        internal List<string> alwaysExpanded = new List<string>();
         
         public HierarchyData GetOrAddSceneData(string scenePath)
         {

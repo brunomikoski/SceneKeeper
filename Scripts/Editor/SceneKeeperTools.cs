@@ -10,6 +10,8 @@ namespace BrunoMikoski.SceneHierarchyKeeper
         private const string HierarchyKeeperEnabledKey = "HierarchyKeeperEnabled";
         private const string SelectionKeeperEnabledKey = "SelectionKeeperEnabled";
         private const string IgnorePlaytimeSelectionKeeperKey = "IgnorePlayTimeSelection";
+        private const string AlwaysExpandedMenuKey = "GameObject/Scene Keeper/Always Expanded";
+        private const string KeepSceneExpandedMenuKey = "GameObject/Scene Keeper/Follow Scene Expanded";
 
         [MenuItem (ToggleSceneKeeperMenuKey)]
         private static void ToggleHierarchyKeeper()
@@ -68,6 +70,30 @@ namespace BrunoMikoski.SceneHierarchyKeeper
         internal static bool IsIgnoringPlaytimeSelection()
         {
             return EditorPrefs.GetBool(IgnorePlaytimeSelectionKeeperKey, true);
+        }
+
+        [MenuItem(AlwaysExpandedMenuKey, false)]
+        public static void AlwaysExpanded()
+        {
+            SceneStateKeeper.SetAlwaysExpanded(true, Selection.objects);
+        }
+        
+        [MenuItem(AlwaysExpandedMenuKey, true)]
+        public static bool AlwaysExpandedValidate()
+        {
+            return !SceneStateKeeper.IsObjectsExpanded(Selection.objects);
+        }
+        
+        [MenuItem(KeepSceneExpandedMenuKey, false)]
+        public static void KeepSceneExpanded()
+        {
+            SceneStateKeeper.SetAlwaysExpanded(false, Selection.objects);
+        }
+        
+        [MenuItem(KeepSceneExpandedMenuKey, true)]
+        public static bool KeepSceneExpandedValidate()
+        {
+            return SceneStateKeeper.IsObjectsExpanded(Selection.objects);
         }
     }
 }
