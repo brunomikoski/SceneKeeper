@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -158,9 +159,6 @@ namespace BrunoMikoski.SceneHierarchyKeeper
             if (!SceneKeeperTools.IsHierarchyKeeperActive()) 
                 return;
 
-            if (!SceneData.TryGetSceneData(scene.path, out HierarchyData sceneHierarchyData)) 
-                return;
-            
             object sceneHierarchy = SceneHierarchyWindowType.GetProperty(SceneHierarchyPropertyName)
                 .GetValue(HierarchyWindow);
             MethodInfo setExpandedMethod =
@@ -172,6 +170,20 @@ namespace BrunoMikoski.SceneHierarchyKeeper
                 throw new Exception(
                     $"Could not find a method with name {ExpandTreeViewItemMethodName} on type {UnityEditorSceneHierarchyWindowTypeName}, maybe unity changed it? ");
             }
+            
+            for (int i = 0; i < SceneData.alwaysExpanded.Count; i++)
+            {
+                string alwaysExpandedItemPath = SceneData.alwaysExpanded[i];
+                if (TryToFindInAllOpenScenes(alwaysExpandedItemPath, out GameObject targetGameObject))
+                {
+                    setExpandedMethod.Invoke(sceneHierarchy, new object[] {targetGameObject.GetInstanceID(), true});
+                }
+            }
+            
+            if (!SceneData.TryGetSceneData(scene.path, out HierarchyData sceneHierarchyData)) 
+                return;
+
+            setExpandedMethod.Invoke(sceneHierarchy, new object[] {scene.handle, true});
 
             for (int i = 0; i < sceneHierarchyData.itemsPath.Count; i++)
             {
@@ -191,7 +203,7 @@ namespace BrunoMikoski.SceneHierarchyKeeper
         {
             if (!SceneKeeperTools.IsSelectionKeeperActive()) 
                 return;
-            
+
             if (!SceneData.TryGetSceneSelectionData(scene.path, out SelectionData resultSelectionData)) 
                 return;
             
@@ -247,6 +259,7 @@ namespace BrunoMikoski.SceneHierarchyKeeper
             {
                 int instanceID = result[i];
                 Object targetObj = EditorUtility.InstanceIDToObject(instanceID);
+
                 if (targetObj == null)
                     continue;
 
@@ -294,6 +307,18 @@ namespace BrunoMikoski.SceneHierarchyKeeper
         private static bool TryGetLastValidSelectionForScene(Scene targetScene, out List<GameObject> resultGameObjects)
         {
             return selectionHistory.TryGetValue(targetScene, out resultGameObjects);
+        }
+
+        private static bool TryToFindInAllOpenScenes(string targetItemPath, out GameObject resultGameObject)
+        {
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                if (TryToFindBySceneRootObjects(SceneManager.GetSceneAt(i), targetItemPath, out resultGameObject))
+                    return true;
+            }
+            
+            resultGameObject = null;
+            return false;
         }
 
         private static bool TryToFindBySceneRootObjects(Scene scene, string targetItemPath, out GameObject resultGameObject)
@@ -365,6 +390,50 @@ namespace BrunoMikoski.SceneHierarchyKeeper
             }
 
             return instance;
+        }
+
+        public static bool IsObjectsExpanded(params Object[] objects)
+        {
+            GameObject[] gameObjects = new GameObject[objects.Length];
+            for (int i = 0; i < objects.Length; i++)
+            {
+                gameObjects[i] = (GameObject) objects[i];
+            }
+
+            return IsObjectsExpanded(gameObjects);
+        }
+        
+        public static bool IsObjectsExpanded(params GameObject[] gameObjects)
+        {
+            for (int i = 0; i < gameObjects.Length; i++)
+            {
+                if (!SceneData.alwaysExpanded.Contains(gameObjects[i].transform.GetPath()))
+                    return false;
+            }
+
+            return true;
+        }
+
+        public static void SetAlwaysExpanded(bool alwaysExpanded, params Object[] objects)
+        {
+            for (int i = 0; i < objects.Length; i++)
+            {
+                Object obj = objects[i];
+                if (obj is GameObject gameObject)
+                {
+                    string gameObjectPath = gameObject.transform.GetPath();
+                    if (alwaysExpanded)
+                    {
+                        if(!SceneData.alwaysExpanded.Contains(gameObjectPath))
+                            SceneData.alwaysExpanded.Add(gameObjectPath);
+                    }
+                    else
+                    {
+                        SceneData.alwaysExpanded.Remove(gameObjectPath);
+                    }
+                }
+            }
+            SaveData();
         }
     } 
 }
