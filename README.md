@@ -1,7 +1,7 @@
 # Scene Keeper
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://github.com/brunomikoski/SceneKeeper/blob/develop/LICENSE)
-[![openupm](https://img.shields.io/npm/v/com.brunomikoski.SceneKeeper?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.brunomikoski.SceneKeeper/)
+[![openupm](https://img.shields.io/npm/v/com.brunomikoski.scenekeeper?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.brunomikoski.scenekeeper/)
 
 [![](https://img.shields.io/github/followers/brunomikoski?label=Follow&style=social)](https://github.com/brunomikoski) [![](https://img.shields.io/twitter/follow/brunomikoski?style=social)](https://twitter.com/brunomikoski)
 
