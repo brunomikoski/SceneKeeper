@@ -29,8 +29,8 @@ If its annoying for some reason, or someone don't want to use on your project yo
 ### Can I disable just the selection?
 For sure the options is there on the same menu `Tools/Scene Keeper/Selection/Keep Selection`
 
-### Can I disable the selection keeping at runtime?
-Yes! If you don't want your selection be stores from runtime you can disable it here `Tools/Scene Keeper/Selection/Ignore Playtime Selection`, so seleciton will be only stored / restored at editor time.
+### Can I disable the selection at runtime?
+Yes! If you don't want your selection be stored from runtime you can disable it here `Tools/Scene Keeper/Selection/Ignore Playtime Selection`, so seleciton will be only stored / restored at editor time.
 
 
 ## System Requirements
