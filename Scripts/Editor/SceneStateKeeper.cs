@@ -12,6 +12,7 @@ namespace BrunoMikoski.SceneHierarchyKeeper
     public static class SceneStateKeeper
     {
         private const string HIERARCHY_DATA_STORAGE_KEY = "_cachedHierarchyData_storage_key";
+        private const string FRESH_BOOT_KEY = "fresh_boot_key";
         private const int CHILD_LIST_CAPACITY = 512;
 
         private static SceneData cachedSceneData;
@@ -25,11 +26,11 @@ namespace BrunoMikoski.SceneHierarchyKeeper
             }
         }
         
-        private static Dictionary<Transform, string> sceneItemsCache = new Dictionary<Transform, string>();
-        private static Dictionary<string, GameObject> pathToGameObjectsCache = new Dictionary<string, GameObject>();
-        private static List<Transform> childListTransform = new List<Transform>(CHILD_LIST_CAPACITY);
-        private static Dictionary<Scene, List<GameObject>> selectionHistory = new Dictionary<Scene, List<GameObject>>();
-        private static HashSet<Scene> clearedSceneChangeLists = new HashSet<Scene>();
+        private static readonly Dictionary<Transform, string> SceneItemsCache = new Dictionary<Transform, string>();
+        private static readonly Dictionary<string, GameObject> PathToGameObjectsCache = new Dictionary<string, GameObject>();
+        private static readonly List<Transform> ChildListTransform = new List<Transform>(CHILD_LIST_CAPACITY);
+        private static readonly Dictionary<Scene, List<GameObject>> SelectionHistory = new Dictionary<Scene, List<GameObject>>();
+        private static readonly HashSet<Scene> ClearedSceneChangeLists = new HashSet<Scene>();
        
         static SceneStateKeeper()
         {
@@ -39,7 +40,13 @@ namespace BrunoMikoski.SceneHierarchyKeeper
             SceneManager.sceneUnloaded += OnSceneUnloaded;
             Selection.selectionChanged += OnSelectionChanged;
             EditorApplication.quitting += OnEditorApplicationQuitting;
-            EditorApplication.delayCall += RestoreFromAllOpenScenes;
+            
+            if (SessionState.GetBool(FRESH_BOOT_KEY, true))
+            {
+                EditorApplication.update += RestoreFromAllOpenScenes;
+                SessionState.SetBool(FRESH_BOOT_KEY, false);
+            }
+
         }
 
         private static void OnEditorApplicationQuitting()
@@ -77,9 +84,11 @@ namespace BrunoMikoski.SceneHierarchyKeeper
                 StoreScenedData(SceneManager.GetSceneAt(i));
             }
         }
-
+        
         private static void RestoreFromAllOpenScenes()
         {
+            EditorApplication.update -= RestoreFromAllOpenScenes;
+
             if (!UnityHierarchyTools.IsHierarchyWindowOpen())
                 return;
             
@@ -104,16 +113,16 @@ namespace BrunoMikoski.SceneHierarchyKeeper
                     for (int i = 0; i < SceneManager.sceneCount; i++)
                     {
                         Scene scene = SceneManager.GetSceneAt(i);
-                        if (!selectionHistory.ContainsKey(scene))
+                        if (!SelectionHistory.ContainsKey(scene))
                             continue;
                         
-                        selectionHistory[scene].Clear();
+                        SelectionHistory[scene].Clear();
                     }
                 }
                 return;
             }
             
-            clearedSceneChangeLists.Clear();
+            ClearedSceneChangeLists.Clear();
             for (int i = 0; i < Selection.objects.Length; i++)
             {
                 Object selectedObject = Selection.objects[i];
@@ -121,26 +130,29 @@ namespace BrunoMikoski.SceneHierarchyKeeper
                 {
                     Scene selectedGameObjectScene = selectedGameObject.scene;
 
-                    if (!selectionHistory.ContainsKey(selectedGameObjectScene))
+                    if (!SelectionHistory.ContainsKey(selectedGameObjectScene))
                     {
-                        selectionHistory.Add(selectedGameObjectScene, new List<GameObject>());
+                        SelectionHistory.Add(selectedGameObjectScene, new List<GameObject>());
                     }
                     else
                     {
-                        if (!clearedSceneChangeLists.Contains(selectedGameObjectScene))
+                        if (!ClearedSceneChangeLists.Contains(selectedGameObjectScene))
                         {
-                            selectionHistory[selectedGameObjectScene].Clear();
-                            clearedSceneChangeLists.Add(selectedGameObjectScene);
+                            SelectionHistory[selectedGameObjectScene].Clear();
+                            ClearedSceneChangeLists.Add(selectedGameObjectScene);
                         }
                     }
 
-                    selectionHistory[selectedGameObjectScene].Add(selectedGameObject);
+                    SelectionHistory[selectedGameObjectScene].Add(selectedGameObject);
                 }
             }
         }
 
         private static void RestoreSceneData(Scene scene)
         {
+            if (scene.buildIndex == -1)
+                return;
+
             if (!UnityHierarchyTools.IsHierarchyWindowOpen())
                 return;
 
@@ -209,6 +221,9 @@ namespace BrunoMikoski.SceneHierarchyKeeper
 
         private static void StoreScenedData(Scene targetScene)
         {
+            if (targetScene.buildIndex == -1)
+                return;
+
             if (!UnityHierarchyTools.IsHierarchyWindowOpen())
                 return;
 
@@ -283,7 +298,7 @@ namespace BrunoMikoski.SceneHierarchyKeeper
 
         private static bool TryGetLastValidSelectionForScene(Scene targetScene, out List<GameObject> resultGameObjects)
         {
-            return selectionHistory.TryGetValue(targetScene, out resultGameObjects);
+            return SelectionHistory.TryGetValue(targetScene, out resultGameObjects);
         }
 
         private static bool TryToFindInAllOpenScenes(string targetItemPath, out GameObject resultGameObject)
@@ -300,18 +315,18 @@ namespace BrunoMikoski.SceneHierarchyKeeper
 
         private static bool TryToFindBySceneRootObjects(Scene scene, string targetItemPath, out GameObject resultGameObject)
         {
-            if (pathToGameObjectsCache.TryGetValue(targetItemPath, out resultGameObject))
+            if (PathToGameObjectsCache.TryGetValue(targetItemPath, out resultGameObject))
             {
                 if (resultGameObject != null)
                     return true;
                 
-                pathToGameObjectsCache.Remove(targetItemPath);
+                PathToGameObjectsCache.Remove(targetItemPath);
             }
             
             resultGameObject = GameObject.Find(targetItemPath);
             if (resultGameObject != null)
             {
-                pathToGameObjectsCache.Add(targetItemPath, resultGameObject);
+                PathToGameObjectsCache.Add(targetItemPath, resultGameObject);
                 return true;
             }
             
@@ -320,20 +335,20 @@ namespace BrunoMikoski.SceneHierarchyKeeper
             {
                 GameObject rootGameObject = objects[i];
 
-                rootGameObject.GetComponentsInChildren(true, childListTransform);
-                for (int j = 0; j < childListTransform.Count; j++)
+                rootGameObject.GetComponentsInChildren(true, ChildListTransform);
+                for (int j = 0; j < ChildListTransform.Count; j++)
                 {
-                    Transform transform = childListTransform[j];
-                    if (!sceneItemsCache.TryGetValue(transform, out string itemPath))
+                    Transform transform = ChildListTransform[j];
+                    if (!SceneItemsCache.TryGetValue(transform, out string itemPath))
                     {
                         itemPath = transform.GetPath();
-                        sceneItemsCache.Add(transform, itemPath);
+                        SceneItemsCache.Add(transform, itemPath);
                     }
                     
                     if (itemPath.Equals(targetItemPath, StringComparison.OrdinalIgnoreCase))
                     {
                         resultGameObject = transform.gameObject;
-                        pathToGameObjectsCache.Add(targetItemPath, resultGameObject);
+                        PathToGameObjectsCache.Add(targetItemPath, resultGameObject);
                         return true;
                     }
                 }
