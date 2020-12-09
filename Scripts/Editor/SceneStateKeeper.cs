@@ -372,6 +372,16 @@ namespace BrunoMikoski.SceneHierarchyKeeper
             string json = EditorJsonUtility.ToJson(SceneData);
             EditorPrefs.SetString($"{Application.productName}{HIERARCHY_DATA_STORAGE_KEY}", json);
         }
+
+        internal static void ClearData()
+        {
+            EditorPrefs.DeleteKey($"{Application.productName}{HIERARCHY_DATA_STORAGE_KEY}");
+        }
+
+        internal static bool HasData()
+        {
+            return EditorPrefs.HasKey($"{Application.productName}{HIERARCHY_DATA_STORAGE_KEY}");
+        }
         
         private static SceneData LoadOrCreateData()
         {

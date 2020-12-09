@@ -63,6 +63,13 @@ namespace BrunoMikoski.SceneHierarchyKeeper
                     obj.ApplyModifiedProperties();
             }
 
+            using (new EditorGUI.DisabledScope(!SceneStateKeeper.HasData()))
+            {
+                if (GUILayout.Button("Clear Local Cache", EditorStyles.miniButton))
+                {
+                    SceneStateKeeper.ClearData();
+                }
+            }
         }
     }
 }
