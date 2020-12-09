@@ -84,8 +84,6 @@ namespace BrunoMikoski.SceneHierarchyKeeper
             }
         }
 
-
-
         internal static void SetExpanded(int id, bool isExpanded)
         {
             SetExpandedMethodInfo.Invoke(SceneHierarchyProperty, new object[] {id, isExpanded});

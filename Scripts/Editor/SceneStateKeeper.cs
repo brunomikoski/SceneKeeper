@@ -100,7 +100,7 @@ namespace BrunoMikoski.SceneHierarchyKeeper
 
         private static void OnSelectionChanged()
         {
-            if (!SceneKeeperTools.IsSelectionKeeperActive())
+            if (!SceneKeeperSettings.GetInstance().KeepSelection)
                 return;
             
             if (!UnityHierarchyTools.IsHierarchyWindowOpen())
@@ -164,7 +164,7 @@ namespace BrunoMikoski.SceneHierarchyKeeper
 
         private static void RestoreHierarchyData(Scene scene, ref HashSet<string> alreadySelectedGameObjectPaths)
         {
-            if (!SceneKeeperTools.IsHierarchyKeeperActive()) 
+            if (!SceneKeeperSettings.GetInstance().KeepHierarchy)
                 return;
 
             for (int i = 0; i < SceneData.alwaysExpanded.Count; i++)
@@ -198,7 +198,7 @@ namespace BrunoMikoski.SceneHierarchyKeeper
 
         private static void RestoreSelectionData(Scene scene, ref HashSet<string> alreadySelectedGameObjectPaths)
         {
-            if (!SceneKeeperTools.IsSelectionKeeperActive()) 
+            if (!SceneKeeperSettings.GetInstance().KeepSelection)
                 return;
 
             if (!SceneData.TryGetSceneSelectionData(scene.path, out SelectionData resultSelectionData)) 
@@ -239,9 +239,12 @@ namespace BrunoMikoski.SceneHierarchyKeeper
             if (EditorApplication.isPlayingOrWillChangePlaymode) 
                 return;
 
-            if (!SceneKeeperTools.IsHierarchyKeeperActive()) 
+            if (!SceneKeeperSettings.GetInstance().KeepHierarchy)
                 return;
 
+            if (Application.isPlaying && SceneKeeperSettings.GetInstance().IgnoreHierarchyAtRuntime)
+                return;
+            
             int[] expandedItemIDs = UnityHierarchyTools.GetExpandedItems();
 
             HierarchyData data = SceneData.GetOrAddSceneData(targetScene.path);
@@ -272,10 +275,10 @@ namespace BrunoMikoski.SceneHierarchyKeeper
 
         private static void StoreSelectionData(Scene targetScene, ref HashSet<GameObject> alreadySelectedGameObjects)
         {
-            if (!SceneKeeperTools.IsSelectionKeeperActive()) 
+            if (!SceneKeeperSettings.GetInstance().KeepSelection)
                 return;
 
-            if (Application.isPlaying && SceneKeeperTools.IsIgnoringPlaytimeSelection())
+            if (Application.isPlaying && SceneKeeperSettings.GetInstance().IgnoreRuntimeSelection)
                 return;
 
             if (!TryGetLastValidSelectionForScene(targetScene, out List<GameObject> selectedGameObjects)) 
