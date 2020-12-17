@@ -1,6 +1,8 @@
 using System;
 using System.Reflection;
 using UnityEditor;
+using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace BrunoMikoski.SceneHierarchyKeeper
 {
@@ -34,7 +36,9 @@ namespace BrunoMikoski.SceneHierarchyKeeper
             {
                 if (cachedHierarchyWindow == null)
                 {
-                    cachedHierarchyWindow = EditorWindow.GetWindow(SceneHierarchyWindowType);
+                    Object[] allWindows = Resources.FindObjectsOfTypeAll(SceneHierarchyWindowType);
+                    if (allWindows.Length > 0)
+                        cachedHierarchyWindow = (EditorWindow) allWindows[0];
                 }
                 return cachedHierarchyWindow;
             }
