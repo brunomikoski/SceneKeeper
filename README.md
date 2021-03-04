@@ -37,22 +37,38 @@ Yes! If you don't want your selection be stored from runtime you can disable it 
 Unity 2018.4.0 or later versions
 
 
-## Installation
+## How to install
 
-### OpenUPM
-The package is available on the [openupm registry](https://openupm.com). It's recommended to install it via [openupm-cli](https://github.com/openupm/openupm-cli).
+<details>
+<summary>Add from OpenUPM <em>| via scoped registry, recommended</em></summary>
 
-```
-openupm add com.brunomikoski.scenekeeper
-```
+This package is available on OpenUPM: https://openupm.com/packages/com.brunomikoski.scenekeeper
 
-### Manifest
-You can also install via git URL by adding this entry in your **manifest.json**
-```
-"com.brunomikoski.scenekeeper": "https://github.com/brunomikoski/SceneKeeper.git"
-```
+To add it the package to your project:
 
-### Unity Package Manager
-```
-from Window->Package Manager, click on the + sign and Add from git: https://github.com/brunomikoski/SceneKeeper.git
-```
+- open `Edit/Project Settings/Package Manager`
+- add a new Scoped Registry:
+  ```
+  Name: OpenUPM
+  URL:  https://package.openupm.com/
+  Scope(s): com.brunomikoski
+  ```
+- click <kbd>Save</kbd>
+- open Package Manager
+- click <kbd>+</kbd>
+- select <kbd>Add from Git URL</kbd>
+- paste `com.brunomikoski.scenekeeper`
+- click <kbd>Add</kbd>
+</details>
+
+<details>
+<summary>Add from GitHub | <em>not recommended, no updates :( </em></summary>
+
+You can also add it directly from GitHub on Unity 2019.4+. Note that you won't be able to receive updates through Package Manager this way, you'll have to update manually.
+
+- open Package Manager
+- click <kbd>+</kbd>
+- select <kbd>Add from Git URL</kbd>
+- paste `https://github.com/brunomikoski/SceneKeeper.git`
+- click <kbd>Add</kbd>
+</details>
