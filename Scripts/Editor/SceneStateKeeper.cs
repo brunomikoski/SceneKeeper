@@ -255,6 +255,11 @@ namespace BrunoMikoski.SceneHierarchyKeeper
                 if (targetObj == null)
                     continue;
 
+                if (targetObj.hideFlags.HasFlag(HideFlags.HideInHierarchy)
+                    || targetObj.hideFlags.HasFlag(HideFlags.NotEditable)
+                    || targetObj.hideFlags.HasFlag(HideFlags.HideAndDontSave))
+                    continue;
+
                 if (targetObj is GameObject gameObject)
                 {
                     if (alreadySelectedGameObjects.Contains(gameObject))
@@ -399,7 +404,11 @@ namespace BrunoMikoski.SceneHierarchyKeeper
         {
             for (int i = 0; i < gameObjects.Length; i++)
             {
-                if (!SceneData.alwaysExpanded.Contains(gameObjects[i].transform.GetPath()))
+                GameObject gameObject = gameObjects[i];
+                if (gameObject == null)
+                    continue;
+                
+                if (!SceneData.alwaysExpanded.Contains(gameObject.transform.GetPath()))
                     return false;
             }
 
