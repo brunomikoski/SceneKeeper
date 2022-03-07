@@ -34,6 +34,9 @@ namespace BrunoMikoski.SceneHierarchyKeeper
        
         static SceneStateKeeper()
         {
+            if (Application.isBatchMode)
+                return;
+            
             EditorSceneManager.sceneOpened += OnSceneOpened;
             SceneManager.sceneLoaded += OnSceneLoaded;
             EditorSceneManager.sceneClosing += OnSceneClosing;
